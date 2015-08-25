@@ -25,9 +25,39 @@ def execute_query(query, variables=(), fetch=False, commit=False):
 	if commit: conn.commit()
 	conn.close()
 	return fetched	
+
+# def getPlayerID(name):
+	# """ Returns the ID of the player from the tournament database
+	# args:
+	# name - the player's name as a STRING
+	# """
+	# retID = execute_query("SELECT id FROM players WHERE players.name = (%s)",(args[0],),True)
+	# return retID[0][0]
+	
+# def getPlayerName(id):
+	# """ Returns the Name of the player from the tournament database
+	# args:
+	# id - the player's ID as an INT
+	# """
+	# retName = execute_query("SELECT name FROM players WHERE players.id = (%i)",(args[0],),True)
+	# return retName[0][0]
+	
+def getTournamentID(name):
+	""" Returns the ID of a tournament from the tournament database
+	args:
+	name - the tournament's name as a STRING
+	"""
+	retID = execute_query("SELECT id FROM tournaments WHERE tournaments.name = (%s)",(name,),True)
+	if not retID:
+		# based on how the database is built, there will never be a tournament with an ID of 0, because serial numbers always start at 1.
+		# This takes care of errors where integers are expected in functions for queries, but 'none' cannot be passed.
+		return 0
+	else:
+		# since a tuple is returned, this accesses the first data point in the first tuple, which will always be the single value we're after.
+		return retID[0][0]
 	
 def deleteMatches(*args):
-	"""Remove all matches from a given tournament. Uses no parameter interpolation to eliminate SQL injection attacks.
+	"""Remove all matches from a given tournament NAME AS A STRING. Uses no parameter interpolation to eliminate SQL injection attacks.
 	If no arguments are supplied, this deletes all matches
 	"""
 	if not args:
@@ -35,19 +65,42 @@ def deleteMatches(*args):
 		execute_query("DELETE FROM matches;", commit = True)
 	else:
 		# if there args given (which must be a string of the tournament name), deletes all matches belonging to a given tournament from the matches table
-		execute_query("DELETE FROM matches WHERE tournament = (%s)",(args[0],),commit = True)
+		# this line below uses the getTournamentID function, since the database of players and matches are based on the ID of the tournament, but not the name
+		# however since running the test multiple times will result in different serial numbers, we cannot rely on static ID numbers. We must rely on the name.
+		tournamentID = getTournamentID(args[0])
+		print "deleteMatches -- tournamentID = "+str(tournamentID)
+		# The tournamentID is converted into a string so it can be used within the query.
+		execute_query("DELETE FROM matches WHERE tournament_id = (%s)",(str(tournamentID),),commit = True)
 	
 def deletePlayers(*args):
-	"""Remove all players from a given tournament (MUST BE STRING). Uses bleach and no parameter interpolation to eliminate SQL and CSS attacks.
-	If no arguments are supplied, this deletes all matches
+	"""Remove all players from a given tournament (MUST BE STRING). Uses  no parameter interpolation to eliminate SQL and CSS attacks.
+	If no arguments are supplied, this deletes all players
 	"""
 	if not args:
 		# if there are no args give, delete all players from the players table
 		execute_query("DELETE FROM players;", commit = True)
 	else:
 		# if there args given (which must be a string of the tournament name), deletes all players belonging to a given tournament from the players table.
-		execute_query("DELETE FROM players WHERE tournament = (%s)", (args[0],),commit = True)
+		tournamentID = getTournamentID(args[0])
+		execute_query("DELETE FROM players WHERE tournament_id = (%s)", (str(tournamentID),),commit = True)
 
+def deleteTournaments(*args):
+	"""Remove all tournaments based on name (MUST BE STRING). Uses no parameter interpolation to eliminate SQL and CSS attacks.
+	If no arguments are supplied, this deletes all tournaments
+	"""
+	# because the players and matches tables are dependent on the tournaments, they must be purged first...
+	if not args:
+		# if there are no args give, delete all tournaments from the tournaments table
+		deleteMatches()
+		deletePlayers()
+		execute_query("DELETE FROM tournaments;", commit = True)
+	else:
+		# if there args given (which must be a string of the tournament name), deletes single tournament.
+		deleteMatches(args[0])
+		deletePlayers(args[0])
+		tournamentID = getTournamentID(args[0])
+		execute_query("DELETE FROM tournaments WHERE name = (%s)", (str(tournamentID),),commit = True)	
+		
 def countPlayers(*args):
 	"""Returns the number of players currently registered in a given tournament (MUST BE STRING). Uses no parameter interpolation to eliminate SQL attacks.
 	If no arguments are supplied, this counts all players registered for all tournaments.
@@ -57,10 +110,20 @@ def countPlayers(*args):
 		count = execute_query("SELECT count(*) as count FROM players;", fetch = True)
 	else:
 		# if there are arguments (which must be a string of the tournament name), returns count of all players in the given tournament
-		count = execute_query("SELECT count(*) as count FROM players WHERE tournament = (%s);", (args[0],),True)
+		tournamentID = getTournamentID(args[0])
+		count = execute_query("SELECT count(*) as count FROM players WHERE tournament_id = (%s);", (str(tournamentID),),True)
 	# because the returned data will be in a tuple within a tuple, this accesses the only value, which should be the value of the count.
 	return count[0][0]
 
+def registerTournament(name):
+	"""Adds a tournament to the tournament database.
+	The database assigns a unique serial id number for the tournament.
+	Players and matches will refer to this tournament ID.
+	Args:
+	name = the name desired for the tournament"""
+	execute_query("INSERT INTO tournaments(name) values(%s);",(name,),commit = True)
+	print str(name)+" has been added to the tournament registry..."
+	
 def registerPlayer(name,tournament):
 	"""Adds a player to the tournament database.
 	The database assigns a unique serial id number for the player.
@@ -70,7 +133,8 @@ def registerPlayer(name,tournament):
 	  
 	Does not use string parameter interpolation to eliminate any possibility of CSS attacks.
 	"""
-	execute_query("INSERT INTO players(name, tournament) values(%s,%s);",(name,tournament,),commit = True)
+	tournamentID = getTournamentID(tournament)
+	execute_query("INSERT INTO players(name, tournament_id) values(%s,%s);",(name,str(tournamentID),),commit = True)
 	print str(name)+" has been added to the player registry for tournament "+str(tournament)+"..."
 	
 def playerStandings(*args):
@@ -78,6 +142,8 @@ def playerStandings(*args):
 	If no tournament is supplied, then the playerStandings for all tournaments will be displayed
 	The first entry in the list should be the player in first place, or a player
 	tied for first place if there is currently a tie.
+	Args:
+		tournament name as a string
 	Returns:
         A list of tuples, each of which contains (tournament, id, name, wins, matches):
         tournament: the name of the tournament the player is in
@@ -91,7 +157,10 @@ def playerStandings(*args):
 		# if there are no arguments given, return the standings for all players
 		execute_query("SELECT * from v_player_record", fetch = True)
 	else:
-		# if there are arguments (which must be a string of the tournament name), returns standing of all players in the given tournament.
+		""" if there are arguments (which must be a string of the tournament name), returns standing of all players in the given tournament.
+		we are able to use the original string, and do not need to convert to ID and back to a string, because the view v_player_record
+		has a column of the actual tournament name instead of the ID. Since the database is ultimately not being manipulated by this function
+		there is no need to reference the ID. The name itself is much easier to keep track of."""
 		results = execute_query("SELECT * from v_player_record where tournament = (%s);", (args[0],),True)
 	return results
 
@@ -103,8 +172,9 @@ def reportMatch(winner, loser, tournament):
 	tournament: the tournament the match was played in
 	Does not use string parameter interpolation to eliminate any possibility of CSS attacks.
 	"""
-	execute_query("INSERT INTO matches(winner,loser,tournament) values(%s,%s,%s);", (winner, loser, tournament,), commit = True)
-	print "Match between:"+str(winner)+" (winner) and "+str(loser)+" (loser) in Tournament: "+tournament+" - has been added to the match registry..."
+	tournamentID = getTournamentID(tournament)
+	execute_query("INSERT INTO matches(winner,loser,tournament_id) values(%s,%s,%s);", (winner, loser, str(tournamentID),), commit = True)
+	print "Match between:"+str(winner)+" (winner) and "+str(loser)+" (loser) in Tournament: "+str(tournament)+" - has been added to the match registry..."
  
 def swissPairings(tournament):
 	"""Returns a list of pairs of players for the next round of a match in a tournament.
