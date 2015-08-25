@@ -24,7 +24,7 @@ create table matches(
 	loser int references players(id)
 );
 
---Test Data
+--Test Data: Uncomment this to populate data with 2 tournaments, 4 players each, which 2 rounds played. This is useful to test the v_player_record view.
 -- insert into tournaments(name) values('Tourney1');
 -- insert into tournaments(name) values('Tourney2');
 

@@ -25,22 +25,6 @@ def execute_query(query, variables=(), fetch=False, commit=False):
 	if commit: conn.commit()
 	conn.close()
 	return fetched	
-
-# def getPlayerID(name):
-	# """ Returns the ID of the player from the tournament database
-	# args:
-	# name - the player's name as a STRING
-	# """
-	# retID = execute_query("SELECT id FROM players WHERE players.name = (%s)",(args[0],),True)
-	# return retID[0][0]
-	
-# def getPlayerName(id):
-	# """ Returns the Name of the player from the tournament database
-	# args:
-	# id - the player's ID as an INT
-	# """
-	# retName = execute_query("SELECT name FROM players WHERE players.id = (%i)",(args[0],),True)
-	# return retName[0][0]
 	
 def getTournamentID(name):
 	""" Returns the ID of a tournament from the tournament database
