@@ -1,9 +1,9 @@
 -- THIS MUST BE EXECUTED OUTSIDE OF THE tournament DATABASE IN PSQL. DO NOT \c tournament BEFORE IMPORTING THIS.
 -- as deleting, remaking, and connecting to the tournament database are the first steps of this import!
 
--- DROP DATABASE IF EXISTS tournament;
--- CREATE DATABASE tournament;
--- \c tournament;
+DROP DATABASE IF EXISTS tournament;
+CREATE DATABASE tournament;
+\c tournament;
 DROP TABLE tournaments CASCADE;
 DROP TABLE players CASCADE;
 DROP TABLE matches CASCADE;
