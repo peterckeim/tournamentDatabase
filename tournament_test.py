@@ -28,6 +28,7 @@ def testCount():
 	deleteMatches()
 	deletePlayers()
 	c = countPlayers()
+	print "count of players is "+str(c)
 	if c == '0':
 		raise TypeError(
 			"countPlayers() should return numeric zero, not string '0'.")
@@ -58,6 +59,7 @@ def testRegisterCountDelete():
 	registerPlayer("Mao Tsu-hsi","Whose Got the Best Badger?")
 	registerPlayer("Atlanta Hope","Whose Got the Best Badger?")
 	c = countPlayers()
+	print "count of players is "+str(c)
 	if c != 4:
 		raise ValueError(
 			"After registering four players, countPlayers should be 4.")
@@ -152,5 +154,4 @@ if __name__ == '__main__':
 	testReportMatches()
 	testPairings()
 	print "Success!  All tests pass!"
-
 
