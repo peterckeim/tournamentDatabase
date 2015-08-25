@@ -16,11 +16,9 @@ The following libraries and programs are required to use these series of files:
 
 -*Python 2.7.1* (https://www.python.org/downloads/)
 
-along with the following python libraries installed:
+along with the following python library installed:
 
 -*psycopg2* (http://initd.org/psycopg/download/ or 'pip install psycopg2' in cmd)
-
--*bleach* (https://pypi.python.org/pypi/bleach or 'pip install bleach' in cmd)
 
 This file current cannot support odd numbered tournaments. Only an even amount of players in each tournament will parse correctly.
 However, this database does support several tournaments without the need to reset all data for each tournament.
@@ -42,11 +40,11 @@ Enter PostgreSQL while in the command prompt (psql) and perform the following co
 
 ```
 CREATE DATABASE tournament;
-
+\c tournament
 \i tournament.sql
 ```
 
-This will create the database, and import the .sql configuration file, giving you access to all configured tables and views.
+This will create the database, connect you to it, and import the .sql configuration file, giving you access to all configured tables and views.
 You have now successfully set up the database, and you are able to use the python functions found in tournament.py to manipulate and add data.
 
 For examples of how the functions are used, please look in the _tournament_test.py_ file
