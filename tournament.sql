@@ -4,10 +4,6 @@
 DROP DATABASE IF EXISTS tournament;
 CREATE DATABASE tournament;
 \c tournament;
-DROP TABLE tournaments CASCADE;
-DROP TABLE players CASCADE;
-DROP TABLE matches CASCADE;
-DROP VIEW v_tablesviews CASCADE;
 
 -- This table must be made first in the .sql file due to dependencies in players and matches.
 create table tournaments(
