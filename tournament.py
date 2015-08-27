@@ -166,6 +166,10 @@ def swissPairings(tournament):
 	appears exactly once in the pairings.  Each player is paired with another
 	player with an equal or nearly-equal win record, that is, a player adjacent
 	to him or her in the standings.
+	NOTE: This only works if there are an even number of players in the given tournament, 
+	or if no args are passed, there must be an even number of players in the players table.
+	Args:
+	tournaments - The name of the tournament (String). default - none. 
 	Returns:
 	A list of tuples, each of which contains (tournament, id1, name1, id2, name2)
 	tournament: the name of the tournament the players are in
@@ -174,20 +178,17 @@ def swissPairings(tournament):
 	id2: the second player's unique id
 	name2: the second player's name
 	"""
-	# NOTE: This only works if there are an even number of players in the given tournament, 
-	# or if no args are passed, there must be an even number of players in the players table.
 	
 	# standing_list fetches the list of tuples generated from playerStandings. It is ordered by wins descending, so the strongest will always be at the top. 
 	standing_list = playerStandings(tournament)
-	# creates a count variable which will be used to iterate through the list. Once count = the list's length, the while loop will terminate.
+	if len(standing_list) % 2 != 0:
+		print "Number of players is not even. Please register another player to allow for swiss pairings."
+		return
 	count = 0
-	# the final_List is the list of tuples showing which pairs of players will face each other in the next round.
 	final_List = []
 	while count < len(standing_list):
 		# grabs the tuples at count and count + 1 (the reason this only works with an even number of players now) and pits them against each other in the final_list,
-		# then increases count by two and repeats the loop
 		final_List.append((standing_list[count][0],standing_list[count][1],standing_list[count][2],standing_list[count+1][1],standing_list[count+1][2]))
 		count += 2
-	# the final list contains (tournament name, contender, contender's name, opponent, opponent's name)
 	return final_List
 
