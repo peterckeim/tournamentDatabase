@@ -39,13 +39,16 @@ After you have PostgreSQL installed, enter your Shell of choice and navigate to 
 Enter PostgreSQL while in the command prompt (psql) and perform the following commands to initialize the database
 
 ```
-CREATE DATABASE tournament;
-\c tournament
 \i tournament.sql
 ```
 
 This will create the database, connect you to it, and import the .sql configuration file, giving you access to all configured tables and views.
-You have now successfully set up the database, and you are able to use the python functions found in tournament.py to manipulate and add data.
+You have now successfully set up the database, and you are able to use the python functions found in tournament.py to manipulate and add data. Exit out of psql with
+
+```
+\q
+```
+to be able to manipulate using python.
 
 For examples of how the functions are used, please look in the _tournament_test.py_ file
 
